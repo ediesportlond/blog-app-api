@@ -10,9 +10,10 @@ app.use(express.json())
 const client = new MongoClient(process.env.MONGO_URL)
 
 const db = client.db("test")
+const collection = db.collection('blog')
 
 app.get("/", async (req, res) => {
-  const result = await db.collection('blog').find().toArray()
+  const result = await collection.find().toArray()
     .catch(err => {
       res.send(err)
       return
@@ -23,7 +24,19 @@ app.get("/", async (req, res) => {
 app.get("/single/:oid", async (req, res) => {
   const { oid } = req.params
   const id = new ObjectId(oid)
-  const result = await db.collection('blog').findOne(id)
+  const result = await collection.findOne(id)
+    .catch(err => {
+      res.send(err)
+      return
+    })
+  res.send(result)
+})
+
+app.delete("/delete/:oid", async (req, res) => {
+  const { oid } = req.params
+  const id = new ObjectId(oid)
+
+  const result = await collection.deleteOne({_id:id})
     .catch(err => {
       res.send(err)
       return
@@ -32,7 +45,7 @@ app.get("/single/:oid", async (req, res) => {
 })
 
 app.post("/post", async (req, res) => {
-  const result = await db.collection('blog').insertOne(req.body)
+  const result = await collection.insertOne(req.body)
     .catch(err => {
       res.status(500).send(err)
       return
@@ -43,7 +56,7 @@ app.post("/post", async (req, res) => {
 app.put("/put/:oid", async (req, res) => {
   const { oid } = req.params
   const id = new ObjectId(oid)
-  const result = await db.collection('blog').updateOne(
+  const result = await collection.updateOne(
     {
       _id: id
     },
