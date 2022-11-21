@@ -1,12 +1,13 @@
 import express from 'express'
 import cors from 'cors'
 import { MongoClient, ObjectId } from 'mongodb'
+import dotenv from 'dotenv/config'
 
 const app = express()
 app.use(cors())
 app.use(express.json())
 
-const client = new MongoClient('mongodb+srv://eebocacode:wotqyn-fuhroc-myzgE4@bocacode.4y9qnuo.mongodb.net/test')
+const client = new MongoClient(process.env.MONGO_URL)
 
 const db = client.db("test")
 
@@ -19,9 +20,20 @@ app.get("/", async (req, res) => {
   res.send(result)
 })
 
+app.get("/single/:oid", async (req, res) => {
+  const { oid } = req.params
+  const id = new ObjectId(oid)
+  const result = await db.collection('blog').findOne(id)
+    .catch(err => {
+      res.send(err)
+      return
+    })
+  res.send(result)
+})
+
 app.post("/post", async (req, res) => {
   const result = await db.collection('blog').insertOne(req.body)
-    .cath(err => {
+    .catch(err => {
       res.status(500).send(err)
       return
     })
@@ -39,7 +51,11 @@ app.put("/put/:oid", async (req, res) => {
       $set: { ...req.body }
     }
   )
+  .catch(err=>{
+    res.status(500).send(err)
+    return
+  })
   res.send(result)
 })
 
-app.listen(3030, () => console.log('listening on http://localhost:3030...'))
+app.listen(process.env.PORT, () => console.log(`listening on http://localhost:${process.env.PORT}...`))
